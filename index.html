@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team Participation Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=DM+Serif+Display&family=Karla:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ffd3e4;--dot:rgba(255,255,255,.5);--ink:#3a2230;--mute:#8a5a73;--card:#fff;--line:#f5b8d0;--accent:#c2185b;--accent2:#ff7eb6;--warn:#ffb347;--shadow:0 6px 0 rgba(194,24,91,.16)}
+@media (prefers-color-scheme:dark){:root{--bg:#2a1a28;--dot:rgba(255,143,192,.14);--ink:#f6eefc;--mute:#e0bfd2;--card:#3a2437;--line:#573450;--accent:#ff8fc0;--accent2:#ff8fc0;--warn:#ffc46b;--shadow:0 6px 0 rgba(0,0,0,.25)}}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font:17px/1.55 "Karla",system-ui,sans-serif;background-color:var(--bg);background-image:radial-gradient(circle,var(--dot) 4.5px,transparent 5.5px);background-size:34px 34px}
+main{max-width:860px;margin:0 auto;padding:40px 20px 80px}
+h1,h2,h3{font-family:"DM Serif Display",Georgia,serif;font-weight:400;line-height:1.15}
+h1{font-family:"Abril Fatface",Georgia,serif;font-size:3rem;margin:0 0 8px;color:var(--accent);letter-spacing:.5px}
+h2{font-size:1.5rem;margin:36px 0 12px}
+p.lead{color:var(--mute);margin:0 0 24px;max-width:60ch;font-size:1.1rem}
+details{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:14px 20px;margin-bottom:24px;box-shadow:var(--shadow)}
+summary{cursor:pointer;font-weight:800}
+ol{padding-left:22px;margin:10px 0 0}
+label{display:block;font-weight:800;margin:18px 0 6px}
+textarea{width:100%;font:15px/1.5 ui-monospace,Menlo,monospace;background:var(--card);color:var(--ink);border:2px solid var(--line);border-radius:16px;padding:14px}
+textarea:focus{border-color:var(--accent);outline:none}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+button{font:800 1.05rem "Karla",sans-serif;padding:11px 22px;border-radius:999px;border:2px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.15);transition:transform .1s}
+button:hover{transform:translateY(-2px)}
+button:active{transform:translateY(2px);box-shadow:none}
+@media (prefers-color-scheme:dark){button{color:#2a1a28}}
+button.ghost{background:var(--card);color:var(--accent)}
+button:disabled{opacity:.6;cursor:wait}
+:focus-visible{outline:3px solid var(--accent2);outline-offset:3px}
+.bar{display:grid;grid-template-columns:150px 1fr 120px;gap:12px;align-items:center;margin:12px 0}
+.who{display:flex;align-items:center;gap:10px;font-weight:800}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font:400 1.1rem "DM Serif Display",serif;flex:none}
+.track{background:var(--line);height:26px;border-radius:999px;overflow:hidden;position:relative}
+.fill{height:100%;border-radius:999px}
+.even{position:absolute;top:0;bottom:0;border-left:3px dotted var(--ink);opacity:.4}
+.vibe{font-size:.9rem;color:var(--mute);font-weight:700}
+.note{color:var(--mute);font-size:.95rem}
+.card{background:var(--card);border:2px solid var(--line);border-left:10px solid var(--c,var(--accent));border-radius:20px;padding:14px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 4px;font-size:1.1rem}
+.tag{display:inline-block;background:var(--line);color:var(--ink);border-radius:999px;padding:2px 12px;font-weight:700;font-size:.85rem}
+.err{color:#d6336c;font-weight:800;margin-top:10px}
+#results{display:none}
+@media (max-width:560px){.bar{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>Team Participation Coach</h1>
+<p class="lead">Paste a meeting transcript. See who talked, who didn't, and get coaching on how to even out participation.</p>
+
+<details open>
+<summary>📖 How to use this with your own team</summary>
+<ol>
+<li>Record your meeting (Zoom, Teams, Otter, etc.) and copy the transcript.</li>
+<li>Make sure each line starts with the speaker's name and a colon, like <code>Maya: I think we should...</code>. Timestamps in front of the name are fine.</li>
+<li>Optional: paste your team charter or Breakout Learning feedback in the second box. The coach will check whether the meeting matched your norms.</li>
+<li>Click <b>Analyze meeting</b>. The bars come from your transcript's word counts; the coaching comes from AI.</li>
+</ol>
+<p class="note">Transcripts are sent to OpenAI to generate coaching and are not stored by this site. Remove sensitive details first.</p>
+</details>
+
+<label for="tr">Meeting transcript</label>
+<textarea id="tr" rows="12" placeholder="Maya: Okay, let's get started...&#10;Jordan: Sure..."></textarea>
+<label for="ctx">Team charter or feedback (optional)</label>
+<textarea id="ctx" rows="4" placeholder="e.g., We agreed everyone speaks before decisions are final."></textarea>
+<div class="row">
+<button id="go">Analyze meeting</button>
+<button id="sample" class="ghost">Load sample transcript</button>
+</div>
+<div id="err" class="err" role="alert"></div>
+
+<div id="results">
+<h2>🎤 Who spoke</h2>
+<div id="bars"></div>
+<p class="note">The dotted line marks an equal share. Woolley et al. found that more equal turn-taking goes with better group performance.</p>
+<div id="signals" class="note"></div>
+<h2>💡 Coaching</h2>
+<div id="coach"><p class="note">Generating coaching…</p></div>
+</div>
+</main>
+
+<script>
+const SAMPLE = `Maya: Okay, let's get started. We need to decide on the topic for the final presentation by the end of today. I've been thinking we should do the remote work angle, because I already found three good sources and I think it ties directly into the readings.
+Jordan: Sounds good to me.
+Maya: Great. So for the structure, I'm thinking we open with the problem, then move to the research, then recommendations. I can draft the outline tonight and split the sections after that. Does that work?
+Devon: Yeah, that works. I could take the research section, I have a bit of time this week, and I read a few articles on hybrid teams already.
+Maya: Perfect, Devon takes research. I'll do the intro and the recommendations since I have the outline in my head. Jordan, you can do the conclusion maybe?
+Jordan: Sure, okay.
+Maya: Alright. Next thing, the slides. I'd like to use a clean template, nothing flashy, and I'll build the master deck so the formatting is consistent. Everyone just send me your content by Thursday.
+Devon: Should we add a section on trust? That came up a lot in what I read.
+Maya: Hmm, I think that might be too much for ten minutes. Let's keep it tight. Moving on, what about the Q and A prep?
+Priya: Sorry, can I go back? I'm not sure remote work is the best topic. A lot of other groups are probably doing it.
+Maya: That's fair, but we already have sources and time is short, so I'd say let's stay with it.
+Priya: Okay.
+Maya: Cool. Any other questions? No? Great, let's wrap up. I'll send the outline tonight and we'll check in Wednesday.
+Devon: Sounds good.
+Jordan: Thanks everyone.`;
+
+const $ = id => document.getElementById(id);
+$('sample').onclick = () => { $('tr').value = SAMPLE; };
+
+function parse(text) {
+  const turns = [];
+  for (const raw of text.split('\n')) {
+    const m = raw.match(/^\s*(?:[\[(]?\d{1,2}:\d{2}(?::\d{2})?[\])]?\s*)?([A-Za-z][\w .'-]{0,30}?)\s*:\s*(.+)$/);
+    if (m) turns.push({ name: m[1].trim(), words: m[2].trim().split(/\s+/).length, q: (m[2].match(/\?/g) || []).length });
+    else if (turns.length && raw.trim()) { const t = turns[turns.length - 1]; t.words += raw.trim().split(/\s+/).length; }
+  }
+  const by = {};
+  turns.forEach(t => { const p = by[t.name] ||= { name: t.name, words: 0, turns: 0, questions: 0 }; p.words += t.words; p.turns++; p.questions += t.q; });
+  const total = Object.values(by).reduce((s, p) => s + p.words, 0) || 1;
+  return Object.values(by).map(p => ({ ...p, share: Math.round(p.words / total * 1000) / 10 })).sort((a, b) => b.words - a.words);
+}
+
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+const COLORS = ['#d6336c','#ff7eb6','#a8234f','#ff9ec7','#e85d9a','#8c1d45'];
+function drawBars(stats) {
+  const even = 100 / stats.length;
+  $('bars').innerHTML = stats.map((p, i) => {
+    const c = COLORS[i % COLORS.length];
+    const vibe = p.share > even * 1.4 ? '🗣️ talked a lot' : p.share < even * 0.6 ? '🌱 quieter voice' : '✨ balanced';
+    return `<div class="bar"><div class="who"><span class="av" style="background:${c}">${esc(p.name[0].toUpperCase())}</span>${esc(p.name)}</div><div class="track"><div class="fill" style="width:${p.share}%;background:${c}"></div><div class="even" style="left:${even}%"></div></div><div><b>${p.share}%</b> · ${p.turns} turns<br><span class="vibe">${vibe}</span></div></div>`;
+  }).join('');
+  const top = stats[0], quiet = stats[stats.length - 1];
+  $('signals').innerHTML = `${esc(top.name)} spoke ${top.share}% of the words; ${esc(quiet.name)} spoke ${quiet.share}%. Questions asked: ${stats.map(p => esc(p.name) + ' ' + p.questions).join(', ')}.`;
+}
+
+function drawCoach(d) {
+  const list = (arr, f) => (arr || []).map(f).join('');
+  $('coach').innerHTML =
+    `<div class="card" style="--c:#e0558f"><p style="margin:0">${esc(d.summary)}</p></div>
+     <h3>🔍 What the transcript shows</h3>` +
+    list(d.observations, o => `<div class="card" style="--c:#c2185b"><h3>${esc(o.title)}</h3><p style="margin:0 0 4px">${esc(o.evidence)}</p><span class="tag">${esc(o.concept)}</span></div>`) +
+    `<h3>🚀 What the leader can do next</h3>` +
+    list(d.leader_actions, a => `<div class="card" style="--c:#ff7eb6"><p style="margin:0 0 4px"><b>${esc(a.action)}</b></p><span class="note">${esc(a.why)}</span></div>`) +
+    `<h3>💬 Tips for each person</h3>` +
+    list(d.individual_tips, t => `<div class="card" style="--c:#f48fb1"><b>${esc(t.person)}:</b> ${esc(t.tip)}</div>`) +
+    (d.charter_check ? `<h3>📜 Charter check</h3><div class="card">${esc(d.charter_check)}</div>` : '');
+}
+
+$('go').onclick = async () => {
+  $('err').textContent = '';
+  const transcript = $('tr').value.trim();
+  const stats = parse(transcript);
+  if (stats.length < 2) { $('err').textContent = 'Could not find at least two speakers. Start each line with "Name:".'; return; }
+  $('results').style.display = 'block';
+  $('coach').innerHTML = '<p class="note">Generating coaching…</p>';
+  drawBars(stats);
+  $('go').disabled = true;
+  try {
+    const r = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ transcript, stats, context: $('ctx').value.trim() }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Request failed');
+    drawCoach(d);
+  } catch (e) {
+    $('coach').innerHTML = '';
+    $('err').textContent = 'Coaching failed: ' + e.message;
+  } finally { $('go').disabled = false; }
+};
+</script>
+</body>
+</html>
